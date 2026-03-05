@@ -1,10 +1,15 @@
-const { Resend } = require("resend");
+const nodemailer = require("nodemailer");
 
-const resend = new Resend(process.env.re_hGYqjRmP_PT3uME3FttpDaSJiCPzqeQFj);
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
 
 const sendBookingEmail = async (booking, previousStatus = null) => {
   try {
-    console.log("📧 Email function started");
 
     const bookingId = booking.trackingId || booking._id;
 
@@ -17,38 +22,34 @@ const sendBookingEmail = async (booking, previousStatus = null) => {
     }
 
     const html = `
-      <div style="font-family:Arial;">
+      <div style="font-family:Arial">
         <h2>${title}</h2>
-        <p><strong>Booking ID:</strong> ${bookingId}</p>
-        <p><strong>Status:</strong> ${booking.status}</p>
-        ${
-          previousStatus
-            ? `<p><strong>Previous Status:</strong> ${previousStatus}</p>`
-            : ""
-        }
-        ${
-          booking.adminNote
-            ? `<p><strong>Admin Note:</strong> ${booking.adminNote}</p>`
-            : ""
-        }
+
+        <p><b>Booking ID:</b> ${bookingId}</p>
+        <p><b>Status:</b> ${booking.status}</p>
+
+        ${previousStatus ? `<p><b>Previous Status:</b> ${previousStatus}</p>` : ""}
+
+        ${booking.adminNote ? `<p><b>Admin Note:</b> ${booking.adminNote}</p>` : ""}
+
         <br/>
-        <p>Thank you for choosing us.</p>
+
+        <p>Thank you for choosing BookMyRepair.</p>
       </div>
     `;
 
-    const response = await resend.emails.send({
-      from: "BookMyRepair <bookmyrepair01@gmail.com>", // your resend account email
+    await transporter.sendMail({
+      from: `"BookMyRepair" <${process.env.EMAIL_USER}>`,
       to: booking.email,
       subject: subject,
-      html: html,
+      html: html
     });
 
-    console.log("✅ Email sent successfully");
-    console.log("Resend Response:", response);
+    console.log("📧 Email sent successfully");
 
   } catch (error) {
     console.error("❌ Email error:", error);
   }
 };
 
-module.exports = { sendBookingEmail };
+module.exports = sendBookingEmail;
