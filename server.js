@@ -40,13 +40,13 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("CORS not allowed"));
-    }
-  },
+  origin: [
+    "http://localhost:3000",
+    "https://bookmyrepair.netlify.app",
+    "https://willowy-croquembouche-2ca609.netlify.app"
+  ],
+  methods: ["GET","POST","PUT","DELETE"],
+  allowedHeaders: ["Content-Type","Authorization"],
   credentials: true
 }));
 
