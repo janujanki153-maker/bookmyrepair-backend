@@ -35,7 +35,8 @@ mongoose.connect(process.env.MONGO_URI)
 
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://bookmyrepair.netlify.app"
+  "https://bookmyrepair.netlify.app",
+  "https://willowy-croquembouche-2ca609.netlify.app"
 ];
 
 app.use(cors({
