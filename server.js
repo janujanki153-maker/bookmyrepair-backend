@@ -11,7 +11,7 @@ const Booking = require("./models/Booking");
 const Admin = require("./models/Admin");
 const Technician = require("./models/Technician");
 const Service = require("./models/Service");
-const sendBookingEmail = require("./services/bookingNotifications");
+// const sendBookingEmail = require("./services/bookingNotifications");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
