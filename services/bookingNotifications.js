@@ -1,6 +1,6 @@
 const { Resend } = require("resend");
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(process.env.re_WaRukKoz_7X3zox6cpqchfaP1nDwYgLGH);
 
 const sendBookingEmail = async (booking, previousStatus = null) => {
   const toEmail = typeof booking?.email === "string" ? booking.email.trim() : "";
