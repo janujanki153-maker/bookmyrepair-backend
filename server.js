@@ -222,7 +222,6 @@ app.post("/api/bookings", async (req, res) => {
   }
 });
 
-
 // GET ALL BOOKINGS
 app.get("/api/bookings", async (req, res) => {
   try {
