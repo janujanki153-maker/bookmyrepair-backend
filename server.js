@@ -207,14 +207,12 @@ const sendBookingEmail = require("./services/bookingNotifications");
 
 // CREATE BOOKING
 app.post("/api/bookings", async (req, res) => {
+
   try {
 
     const booking = await Booking.create(req.body);
 
-    // send email
-    sendBookingEmail(booking).catch(err => {
-      console.log("Email failed:", err.message);
-    });
+    await sendBookingEmail(booking);
 
     res.status(201).json({
       trackingId: booking.trackingId || booking._id,
@@ -227,6 +225,7 @@ app.post("/api/bookings", async (req, res) => {
     res.status(500).json({ error: error.message });
 
   }
+
 });
 
 // GET ALL BOOKINGS
