@@ -27,7 +27,7 @@ mongoose
     });
   })
   .catch((err) => {
-    console.log("❌ MongoDB Connection Error:", err.message);
+    console.log("❌ MongoDB Error:", err.message);
   });
 
 /* ================= MIDDLEWARE ================= */
@@ -74,8 +74,9 @@ app.post("/api/admin/register", async (req, res) => {
 
     const existing = await Admin.findOne({ email });
 
-    if (existing)
+    if (existing) {
       return res.status(409).json({ error: "Email already exists" });
+    }
 
     const salt = crypto.randomBytes(16).toString("hex");
     const hash = hashPassword(password, salt);
@@ -99,13 +100,15 @@ app.post("/api/admin/login", async (req, res) => {
 
     const admin = await Admin.findOne({ email });
 
-    if (!admin)
+    if (!admin) {
       return res.status(401).json({ error: "Invalid credentials" });
+    }
 
     const hash = hashPassword(password, admin.passwordSalt);
 
-    if (hash !== admin.passwordHash)
+    if (hash !== admin.passwordHash) {
       return res.status(401).json({ error: "Invalid credentials" });
+    }
 
     res.json({
       message: "Login success",
@@ -133,6 +136,7 @@ app.put("/api/brands/:id", async (req, res) => {
   const brand = await Brand.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
   });
+
   res.json(brand);
 });
 
@@ -159,11 +163,13 @@ app.put("/api/models/:id", async (req, res) => {
   const model = await Model.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
   });
+
   res.json(model);
 });
 
 app.delete("/api/models/:id", async (req, res) => {
   await Model.findByIdAndDelete(req.params.id);
+
   res.json({ message: "Model deleted" });
 });
 
@@ -183,11 +189,13 @@ app.put("/api/technicians/:id", async (req, res) => {
   const tech = await Technician.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
   });
+
   res.json(tech);
 });
 
 app.delete("/api/technicians/:id", async (req, res) => {
   await Technician.findByIdAndDelete(req.params.id);
+
   res.json({ message: "Technician deleted" });
 });
 
@@ -209,11 +217,13 @@ app.post("/api/bookings", async (req, res) => {
 
 app.get("/api/bookings", async (req, res) => {
   const bookings = await Booking.find().sort({ createdAt: -1 });
+
   res.json(bookings);
 });
 
 app.get("/api/bookings/:id", async (req, res) => {
   const booking = await Booking.findById(req.params.id);
+
   res.json(booking);
 });
 
@@ -221,34 +231,41 @@ app.put("/api/bookings/:id", async (req, res) => {
   const booking = await Booking.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
   });
+
   res.json(booking);
 });
 
 app.delete("/api/bookings/:id", async (req, res) => {
   await Booking.findByIdAndDelete(req.params.id);
+
   res.json({ message: "Booking deleted" });
 });
+
+/* ================= TRACK BOOKING ================= */
 
 app.post("/api/bookings/track", async (req, res) => {
   try {
     const { trackingId, phone } = req.body;
 
-    if (!trackingId || !phone)
+    if (!trackingId || !phone) {
       return res
         .status(400)
-        .json({ error: "Tracking ID and phone are required" });
+        .json({ error: "Tracking ID and phone required" });
+    }
 
     const booking = await Booking.findOne({
       trackingId: trackingId.trim().toUpperCase(),
       phone: phone.trim(),
     });
 
-    if (!booking)
+    if (!booking) {
       return res.status(404).json({ error: "Booking not found" });
+    }
 
     res.json(booking);
   } catch (error) {
-    console.error("TRACK ERROR:", error);
+    console.error(error);
+
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -257,11 +274,13 @@ app.post("/api/bookings/track", async (req, res) => {
 
 app.post("/api/services", async (req, res) => {
   const service = await Service.create(req.body);
+
   res.status(201).json(service);
 });
 
 app.get("/api/services", async (req, res) => {
   const services = await Service.find().sort({ createdAt: -1 });
+
   res.json(services);
 });
 
@@ -269,10 +288,12 @@ app.put("/api/services/:id", async (req, res) => {
   const service = await Service.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
   });
+
   res.json(service);
 });
 
 app.delete("/api/services/:id", async (req, res) => {
   await Service.findByIdAndDelete(req.params.id);
+
   res.json({ message: "Service deleted" });
 });
