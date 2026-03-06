@@ -92,6 +92,7 @@ app.post("/api/admin/register", async (req, res) => {
     });
 
     res.status(201).json(admin);
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -118,6 +119,7 @@ app.post("/api/admin/login", async (req, res) => {
       token: generateToken(),
       admin,
     });
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -130,8 +132,7 @@ app.post("/api/brands", async (req, res) => {
     const brand = await Brand.create(req.body);
     res.status(201).json(brand);
   } catch (error) {
-    console.error("Brand create error:", error);
-    res.status(500).json({ error: "Failed to create brand" });
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -149,7 +150,6 @@ app.put("/api/brands/:id", async (req, res) => {
     const brand = await Brand.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
     });
-
     res.json(brand);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -159,9 +159,7 @@ app.put("/api/brands/:id", async (req, res) => {
 app.delete("/api/brands/:id", async (req, res) => {
   try {
     await Model.deleteMany({ brandId: req.params.id });
-
     await Brand.findByIdAndDelete(req.params.id);
-
     res.json({ message: "Brand deleted" });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -190,31 +188,17 @@ app.get("/api/models", async (req, res) => {
 
 app.post("/api/models/bulk", async (req, res) => {
   try {
-    const models = req.body;
-
-    if (!Array.isArray(models)) {
+    if (!Array.isArray(req.body)) {
       return res.status(400).json({ error: "Invalid data format" });
     }
 
-    const inserted = await Model.insertMany(models);
+    const inserted = await Model.insertMany(req.body);
 
     res.json({
       message: "Models uploaded successfully",
       count: inserted.length,
     });
-  } catch (error) {
-    console.error("Bulk upload error:", error);
-    res.status(500).json({ error: "Bulk upload failed" });
-  }
-});
 
-app.put("/api/models/:id", async (req, res) => {
-  try {
-    const model = await Model.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-
-    res.json(model);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -223,7 +207,6 @@ app.put("/api/models/:id", async (req, res) => {
 app.delete("/api/models/:id", async (req, res) => {
   try {
     await Model.findByIdAndDelete(req.params.id);
-
     res.json({ message: "Model deleted" });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -250,42 +233,19 @@ app.get("/api/technicians", async (req, res) => {
   }
 });
 
-app.put("/api/technicians/:id", async (req, res) => {
-  try {
-    const tech = await Technician.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-
-    res.json(tech);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.delete("/api/technicians/:id", async (req, res) => {
-  try {
-    await Technician.findByIdAndDelete(req.params.id);
-
-    res.json({ message: "Technician deleted" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
 /* ================= BOOKING API ================= */
 
 app.post("/api/bookings", async (req, res) => {
   try {
+
     const booking = await Booking.create(req.body);
 
-    // Send response immediately
     res.status(201).json({
-      trackingId: booking.trackingId,
-      phone: booking.phone,
+      trackingId: booking.trackingId || booking._id,
+      phone: booking.phone
     });
 
-    // Send email in background
-    sendBookingEmail(booking).catch((err) => {
+    sendBookingEmail(booking).catch(err => {
       console.error("Email failed:", err.message);
     });
 
@@ -297,9 +257,27 @@ app.post("/api/bookings", async (req, res) => {
 
 app.get("/api/bookings", async (req, res) => {
   try {
+
     const bookings = await Booking.find().sort({ createdAt: -1 });
 
     res.json(bookings);
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete("/api/bookings/:id", async (req, res) => {
+  try {
+
+    const booking = await Booking.findByIdAndDelete(req.params.id);
+
+    if (!booking) {
+      return res.status(404).json({ error: "Booking not found" });
+    }
+
+    res.json({ message: "Booking deleted successfully" });
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -307,11 +285,16 @@ app.get("/api/bookings", async (req, res) => {
 
 app.post("/api/bookings/track", async (req, res) => {
   try {
+
     const { trackingId, phone } = req.body;
+
+    if (!trackingId || !phone) {
+      return res.status(400).json({ error: "Tracking ID and phone required" });
+    }
 
     const booking = await Booking.findOne({
       trackingId: trackingId.toUpperCase(),
-      phone: phone.trim(),
+      phone: phone.trim()
     });
 
     if (!booking) {
@@ -319,8 +302,9 @@ app.post("/api/bookings/track", async (req, res) => {
     }
 
     res.json(booking);
+
   } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Server error" });
   }
 });
 
@@ -359,7 +343,6 @@ app.put("/api/services/:id", async (req, res) => {
 app.delete("/api/services/:id", async (req, res) => {
   try {
     await Service.findByIdAndDelete(req.params.id);
-
     res.json({ message: "Service deleted" });
   } catch (error) {
     res.status(500).json({ error: error.message });
