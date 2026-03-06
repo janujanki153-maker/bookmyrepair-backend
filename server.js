@@ -229,7 +229,23 @@ app.delete("/api/models/:id", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+app.delete("/api/customers/:phone", async (req, res) => {
+  try {
 
+    const phone = req.params.phone;
+
+    const result = await Booking.deleteMany({ phone });
+
+    res.json({
+      message: "Customer deleted",
+      deletedBookings: result.deletedCount
+    });
+
+  } catch (error) {
+    console.error("Customer delete error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
 /* ================= TECHNICIAN API ================= */
 
 app.post("/api/technicians", async (req, res) => {
