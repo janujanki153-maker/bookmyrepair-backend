@@ -11,6 +11,7 @@ const Booking = require("./models/Booking");
 const Admin = require("./models/Admin");
 const Technician = require("./models/Technician");
 const Service = require("./models/Service");
+const sendBookingEmail = require("./services/bookingNotifications");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -199,74 +200,131 @@ app.delete("/api/technicians/:id", async (req, res) => {
   res.json({ message: "Technician deleted" });
 });
 
+
 /* ================= BOOKING API ================= */
 
+const sendBookingEmail = require("./services/bookingNotifications");
+
+// CREATE BOOKING
 app.post("/api/bookings", async (req, res) => {
   try {
+
     const booking = await Booking.create(req.body);
 
-    res.status(201).json({
-      trackingId: booking.trackingId,
-      phone: booking.phone,
+    // send email
+    sendBookingEmail(booking).catch(err => {
+      console.log("Email failed:", err.message);
     });
+
+    res.status(201).json({
+      trackingId: booking.trackingId || booking._id,
+      phone: booking.phone
+    });
+
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Failed to create booking" });
+
+    console.error("CREATE BOOKING ERROR:", error);
+    res.status(500).json({ error: error.message });
+
   }
 });
 
+// GET ALL BOOKINGS
 app.get("/api/bookings", async (req, res) => {
-  const bookings = await Booking.find().sort({ createdAt: -1 });
+  try {
 
-  res.json(bookings);
+    const bookings = await Booking.find().sort({ createdAt: -1 });
+
+    res.json(bookings);
+
+  } catch (error) {
+
+    res.status(500).json({ error: error.message });
+
+  }
 });
 
+// GET SINGLE BOOKING
 app.get("/api/bookings/:id", async (req, res) => {
-  const booking = await Booking.findById(req.params.id);
+  try {
 
-  res.json(booking);
+    const booking = await Booking.findById(req.params.id);
+
+    res.json(booking);
+
+  } catch (error) {
+
+    res.status(500).json({ error: error.message });
+
+  }
 });
 
+// UPDATE BOOKING
 app.put("/api/bookings/:id", async (req, res) => {
-  const booking = await Booking.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-  });
+  try {
 
-  res.json(booking);
+    const booking = await Booking.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+
+    res.json(booking);
+
+  } catch (error) {
+
+    res.status(500).json({ error: error.message });
+
+  }
 });
 
+// DELETE BOOKING
 app.delete("/api/bookings/:id", async (req, res) => {
-  await Booking.findByIdAndDelete(req.params.id);
+  try {
 
-  res.json({ message: "Booking deleted" });
+    await Booking.findByIdAndDelete(req.params.id);
+
+    res.json({ message: "Booking deleted" });
+
+  } catch (error) {
+
+    res.status(500).json({ error: error.message });
+
+  }
 });
 
-/* ================= TRACK BOOKING ================= */
-
+// TRACK BOOKING
 app.post("/api/bookings/track", async (req, res) => {
   try {
+
     const { trackingId, phone } = req.body;
 
     if (!trackingId || !phone) {
-      return res
-        .status(400)
-        .json({ error: "Tracking ID and phone required" });
+      return res.status(400).json({
+        error: "Tracking ID and phone required"
+      });
     }
 
     const booking = await Booking.findOne({
-      trackingId: trackingId.trim().toUpperCase(),
-      phone: phone.trim(),
+      trackingId: trackingId.toUpperCase(),
+      phone: phone.trim()
     });
 
     if (!booking) {
-      return res.status(404).json({ error: "Booking not found" });
+      return res.status(404).json({
+        error: "Booking not found"
+      });
     }
 
     res.json(booking);
-  } catch (error) {
-    console.error(error);
 
-    res.status(500).json({ error: "Internal server error" });
+  } catch (error) {
+
+    console.error("TRACK ERROR:", error);
+    res.status(500).json({
+      error: "Internal server error"
+    });
+
   }
 });
 
