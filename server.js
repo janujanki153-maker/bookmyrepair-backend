@@ -206,27 +206,25 @@ app.delete("/api/technicians/:id", async (req, res) => {
 
 const sendBookingEmail = require("./services/bookingNotifications");
 
-// CREATE BOOKING
 app.post("/api/bookings", async (req, res) => {
-
   try {
-
     const booking = await Booking.create(req.body);
 
-    await sendBookingEmail(booking);
-
+    // Return response immediately (don't wait for email)
     res.status(201).json({
       trackingId: booking.trackingId || booking._id,
-      phone: booking.phone
+      phone: booking.phone,
+      emailQueued: true,
     });
 
+    // Send email in background
+    sendBookingEmail(booking).catch((error) => {
+      console.error("Email async error:", error.message);
+    });
   } catch (error) {
-
     console.error("CREATE BOOKING ERROR:", error);
     res.status(500).json({ error: error.message });
-
   }
-
 });
 
 // GET ALL BOOKINGS
