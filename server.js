@@ -36,6 +36,7 @@ mongoose
 const allowedOrigins = [
   "http://localhost:3000",
   "https://bookmyrepair.netlify.app",
+  "https://willowy-croquembouche-2ca609.netlify.app"
 ];
 
 app.use(
