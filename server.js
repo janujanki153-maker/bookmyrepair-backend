@@ -278,12 +278,17 @@ app.post("/api/bookings", async (req, res) => {
   try {
     const booking = await Booking.create(req.body);
 
-    await sendBookingEmail(booking);
-
+    // Send response immediately
     res.status(201).json({
       trackingId: booking.trackingId,
       phone: booking.phone,
     });
+
+    // Send email in background
+    sendBookingEmail(booking).catch((err) => {
+      console.error("Email failed:", err.message);
+    });
+
   } catch (error) {
     console.error("CREATE BOOKING ERROR:", error);
     res.status(500).json({ error: error.message });
