@@ -7,9 +7,6 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
-  },
-  tls: {
-    rejectUnauthorized: false
   }
 });
 
@@ -18,34 +15,24 @@ const sendBookingEmail = async (booking) => {
 
     const bookingId = booking.trackingId || booking._id;
 
-    const html = `
-      <div style="font-family:Arial">
+    await transporter.sendMail({
+      from: `"BookMyRepair" <${process.env.EMAIL_USER}>`,
+      to: booking.email,
+      subject: `Booking Confirmed - ${bookingId}`,
+      html: `
         <h2>Booking Confirmed</h2>
-
         <p><b>Booking ID:</b> ${bookingId}</p>
         <p><b>Name:</b> ${booking.name}</p>
         <p><b>Phone:</b> ${booking.phone}</p>
         <p><b>Device:</b> ${booking.brand} ${booking.model}</p>
         <p><b>Service:</b> ${booking.service}</p>
-        <p><b>Status:</b> ${booking.status || "Pending"}</p>
-
-        <br/>
-
-        <p>Thank you for choosing <b>BookMyRepair</b>.</p>
-      </div>
-    `;
-
-    await transporter.sendMail({
-      from: `"BookMyRepair" <${process.env.EMAIL_USER}>`,
-      to: booking.email,
-      subject: `Booking Confirmed - ${bookingId}`,
-      html: html
+      `
     });
 
-    console.log("📧 Email sent successfully");
+    console.log("📧 Email Sent");
 
   } catch (error) {
-    console.error("❌ Email error:", error.message);
+    console.log("❌ Email Error:", error.message);
   }
 };
 
