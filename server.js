@@ -11,7 +11,7 @@ const Booking = require("./models/Booking");
 const Admin = require("./models/Admin");
 const Technician = require("./models/Technician");
 const Service = require("./models/Service");
-// const sendBookingEmail = require("./services/bookingNotifications");
+const sendBookingEmail = require("./services/bookingNotifications");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -203,21 +203,16 @@ app.delete("/api/technicians/:id", async (req, res) => {
 
 
 /* ================= BOOKING API ================= */
-
-const sendBookingEmail = require("./services/bookingNotifications");
-
 app.post("/api/bookings", async (req, res) => {
   try {
     const booking = await Booking.create(req.body);
 
-    // Return response immediately (don't wait for email)
     res.status(201).json({
       trackingId: booking.trackingId || booking._id,
       phone: booking.phone,
       emailQueued: true,
     });
 
-    // Send email in background
     sendBookingEmail(booking).catch((error) => {
       console.error("Email async error:", error.message);
     });
@@ -226,6 +221,7 @@ app.post("/api/bookings", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 
 // GET ALL BOOKINGS
 app.get("/api/bookings", async (req, res) => {
@@ -349,7 +345,11 @@ app.put("/api/services/:id", async (req, res) => {
 });
 
 app.delete("/api/services/:id", async (req, res) => {
-  await Service.findByIdAndDelete(req.params.id);
-
-  res.json({ message: "Service deleted" });
+  try {
+    await Service.findByIdAndDelete(req.params.id);
+    res.json({ message: "Service deleted" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
+
